@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Recommendation System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a73e8, #67d5ff);
+            color: #333;
+            padding: 40px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: #8bf3f3;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 6px;
+            background-color: #46f0e2;
+            border-radius: 10px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #073879;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 10px rgba(26, 115, 232, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #155aab;
+            transform: translateY(-2px);
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .results h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #140147;
+        }
+
+        .course-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .course-card {
+            background-color: #f8dced;
+            border-radius: 10px;
+            padding: 20px;
+            flex: 1 1 calc(50% - 20px); /* Adjust the card width */
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .course-card h3 {
+            margin: 0;
+            color: #fc5089;
+        }
+
+        .course-card a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .course-card a:hover {
+            text-decoration: underline;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 20px;
+            background-color: #27c5ec;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .hero-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .hero-section p {
+            font-size: 1.1rem;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero-section">
+            <h2>Unlock Your Dream Job</h2>
+            <p>Enter your skills and get tailored job recommendations.</p>
+        </div>
+        <h1>Job Recommendation System</h1>
+        <input type="text" id="jobTitle" placeholder="Enter desired job title">
+        <input type="text" id="skills" placeholder="Enter your skills, separated by commas">
+        <button onclick="getRecommendations()">Get Recommendations</button>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        async function getRecommendations() {
+            const jobTitle = document.getElementById('jobTitle').value;
+            const skills = document.getElementById('skills').value.split(',').map(skill => skill.trim());
+
+            try {
+                console.log('Sending request to backend with job title:', jobTitle, 'and skills:', skills);
+                const response = await fetch('http://localhost:5000/api/recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ jobTitle, skills }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                console.log('Received data from backend:', data);
+                displayRecommendations(data);
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<p>An error occurred while fetching recommendations.</p>';
+                console.error('Error:', error);
+            }
+        }
+
+        function displayRecommendations(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // Clear previous results
+            
+            if (data.jobRecommendations && data.jobRecommendations.length > 0) {
+                resultsDiv.innerHTML = `<h2>Job Recommendations:</h2><ul>${data.jobRecommendations.map(job => 
+                    `<li>
+                        <strong>Job Title:</strong> ${job.job_title}<br>
+                        <strong>Link:</strong> <a href="${job.job_link}" target="_blank">View Job</a>
+                    </li>`).join('')}</ul>`;
+            } else if (data.courses && data.courses.length > 0) {
+                resultsDiv.innerHTML = `<h2>Recommended Courses:</h2><div class="course-cards">${data.courses.map(course => 
+                    `<div class="course-card">
+                        <h3>${course.course_title}</h3>
+                        <p><strong>Course URL:</strong> <a href="${course.course_link}" target="_blank">Enroll Now</a></p>
+                    </div>`).join('')}</div>`;
+            } else {
+                resultsDiv.innerHTML = '<p>No recommendations available.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
